@@ -1,0 +1,71 @@
+#' Estimate full area and partial area under ROC curve and their variances for ordinal data
+#' @param a binormal parameter a
+#' @param b binormal parameter b
+#' @param var_a estimation of variance of a
+#' @param var_b estimation of variance of b
+#' @param covar_ab estimation of covariance of binormal parameters a and b
+#' @param e1 lower bound of FPR for the partial area
+#' @param e2 upper bound of FPR for the partial area
+#' @export
+area_estimation_ordinal<-function(a,b,var_a,var_b,covar_ab,e1,e2){
+  #-------------Area and Partial Area under the ROC Curve
+  area_func<-function(x){
+    return(pnorm(a+b*qnorm(x)))
+  }
+  area.full<-integrate(area_func,0,1)$value
+  area.partial<-integrate(area_func,e1,e2)$value
+  h1<-(qnorm(e1)+a*b/(1+b^2))*sqrt(1+b^2)
+  h2<-(qnorm(e2)+a*b/(1+b^2))*sqrt(1+b^2)
+  f<-exp(-a^2/2/(1+b^2))/sqrt(2*pi*(1+b^2))
+  g<-a*b*exp(-a/2/(1+b^2))/sqrt(2*pi*(1+b^2)^3)
+  partialf<-exp(-a^2/2/(1+b^2))/sqrt(2*pi*(1+b^2))*(pnorm(h2)-pnorm(h1))
+  partialg<-exp(-a^2/2/(1+b^2))*(exp(-h1^2/2)-exp(-h2^2/2))/(2*pi*(1+b^2))-a*b*exp(-a^2/2/(1+b^2))*(pnorm(h2)-pnorm(h1))/(sqrt(2*pi*(1+b^2)^3))
+  var_full<-f^2*var_a+g^2*var_b+2*f*g*covar_ab
+  var_partial<-partialf^2*var_a+partialg^2*var_b+2*partialf*partialg*covar_ab
+  output<-list(area.full=NULL,area.partial=NULL,var_full=NULL,var_partial=NULL,covar_ab=NULL,a=NULL,b=NULL)
+  output$area.full<-area.full
+  output$area.partial<-area.partial
+  output$var_full<-var_full
+  output$var_partial<-var_partial
+  output$covar_ab<-covar_ab
+  output$a<-a
+  output$b<-b
+  return(output)
+}
+
+#' Estimate full area and partial area under ROC curve and their variances for continuous data
+#' @param a binormal parameter a
+#' @param b binormal parameter b
+#' @param var_a estimation of variance of a
+#' @param var_b estimation of variance of b
+#' @param covar_ab estimation of covariance of binormal parameters a and b
+#' @param e1 lower bound of FPR for the partial area
+#' @param e2 upper bound of FPR for the partial area
+#' @export
+area_estimation_continuous<-function(a,b,var_a,var_b,covar_ab,e1,e2){
+  #-------------Area and Partial Area under the ROC Curve (Parametric Methods)
+  area_func<-function(x){
+    return(pnorm(a+b*qnorm(x)))
+  }
+  area.full<-integrate(area_func,0,1)$value
+  area.partial<-integrate(area_func,e1,e2)$value
+  h1<-(qnorm(e1)+a*b/(1+b^2))*sqrt(1+b^2)
+  h2<-(qnorm(e2)+a*b/(1+b^2))*sqrt(1+b^2)
+  f<-exp(-a^2/2/(1+b^2))/sqrt(2*pi*(1+b^2))
+  g<-a*b*exp(-a/2/(1+b^2))/sqrt(2*pi*(1+b^2)^3)
+  partialf<-exp(-a^2/2/(1+b^2))/sqrt(2*pi*(1+b^2))*(pnorm(h2)-pnorm(h1))
+  partialg<-exp(-a^2/2/(1+b^2))*(exp(-h1^2/2)-exp(-h2^2/2))/(2*pi*(1+b^2))-a*b*exp(-a^2/2/(1+b^2))*(pnorm(h2)-pnorm(h1))/(sqrt(2*pi*(1+b^2)^3))
+  var_full<-f^2*var_a+g^2*var_b+2*f*g*covar_ab
+  var_partial<-partialf^2*var_a+partialg^2*var_b+2*partialf*partialg*covar_ab
+  output<-list(area.full=NULL,area.partial=NULL,var_full=NULL,var_partial=NULL,covar_ab=NULL,a=NULL,b=NULL)
+  output$area.full<-area.full
+  output$area.partial<-area.partial
+  output$var_full<-var_full
+  output$var_partial<-var_partial
+  output$covar_ab<-covar_ab
+  output$a<-a
+  output$b<-b
+  return(output)
+}
+
+

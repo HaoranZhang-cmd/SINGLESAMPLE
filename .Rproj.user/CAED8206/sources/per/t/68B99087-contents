@@ -1,0 +1,198 @@
+#' Function to estimate the binormal parameters a and b for ordinal data
+#' @param data0 test results of nondiseased subjects
+#' @param data1 test results of diseased subjects
+#' @return estimation of all thresholds,the mean and sd for undiseased subjects,the mean and sd for diseased subjects,and the covariance matrix for binormal parameters a and b
+#' @export
+#用最大似然估计法估计参数
+params_estimate<-function(data0,data1){
+  K<-length(data0)
+  n0<-sum(data0)
+  n1<-sum(data1)
+  #----------------计算对数似然函数
+  loglikelihood<-function(params) {
+    th<-params[1:(K-1)]
+    mu0<-0
+    sigma0<-1
+    a<-params[K]
+    b<-params[K+1]
+    if(any(diff(th)<0)){
+      return(Inf)
+    }
+    if(b<=0){
+      return(Inf)
+    }
+    mu1<-a*sigma0/b+mu0
+    sigma1<-sigma0/b
+    result<-data0[1]*log(pnorm(th[1],mean=mu0,sd=sigma0))+data0[K]*log(1-pnorm(th[K-1],mean=mu0,sd=sigma0))+data1[1]*log(pnorm(th[1],mean=mu1,sd=sigma1))+data1[K]*log(1-pnorm(th[K-1],mean=mu1,sd=sigma1))
+    for (i in 1:(K-2)) {
+      result<-result+data0[i+1]*log(pnorm(th[i+1],mean=mu0,sd=sigma0)-pnorm(th[i],mean=mu0,sd=sigma0))+data1[i+1]*log(pnorm(th[i+1],mean=mu1,sd=sigma1)-pnorm(th[i],mean=mu1,sd=sigma1))
+    }
+    return(-result)
+  }
+  start_params<-c(seq(0,1,length=K-1),1,1)
+  result<-nlminb(start_params,loglikelihood)
+  print(result)
+  hessian<-numDeriv::hessian(loglikelihood, result$par)
+  cov_matrix<-solve(hessian)
+  estimation<-list(th=NULL,a=NULL,b=NULL,cov_matrix=NULL)
+  estimation$th<-result$par[1:(K-1)]
+  estimation$a<-result$par[K]
+  estimation$b<-result$par[K+1]
+  estimation$cov_matrix<-cov_matrix[(K):(K+1),(K):(K+1)]
+  return(estimation)
+}
+
+
+#' Function to fully analyze binormal data
+#' @param data0 test results of nondiseased subjects
+#' @param data1 test results of diseased subjects
+#' @param alpha significance level
+#' @param FPR estimate TPR at a particular FPR rate
+#' @param e1 lower bound of FPR rate for partial area
+#' @param e2 upper bound of FPR rate for partial area
+#' @export
+#--------------准备作图
+roc.binormal<-function(data0,data1,alpha,FPR,e1,e2){
+  estimation<-params_estimate(data0,data1)
+  c<-seq(-10,10,by=0.01)
+  x<-rep(0,length=length(c))
+  y<-rep(0,length=length(c))
+  K<-length(data0)
+  for(i in 1:length(c)){
+    x[i]<-1-pnorm(c[i])
+    y[i]<-1-pnorm(estimation$b*c[i]-estimation$a)
+  }
+
+  #------------------检验binormal assumption是否成立
+  #-----------------------goodness of fit test
+  n0<-sum(data0)
+  n1<-sum(data1)
+  P0<-rep(0,length=length(data0))
+  P1<-rep(0,length=length(data1))
+  P0[1]<-pnorm(estimation$th[1],mean=0,sd=1)
+  P0[K]<-1-pnorm(estimation$th[K-1],mean=0,sd=1)
+  for(i in 2:(K-1)){
+    P0[i]<-pnorm(estimation$th[i],mean=0,sd=1)-pnorm(estimation$th[i-1],mean=0,sd=1)
+  }
+  P1[1]<-pnorm(estimation$th[1],mean=estimation$a/estimation$b,sd=1/estimation$b)
+  P1[K]<-1-pnorm(estimation$th[K-1],mean=estimation$a/estimation$b,sd=1/estimation$b)
+  for(i in 2:(K-1)){
+    P1[i]<-pnorm(estimation$th[i],mean=estimation$a/estimation$b,sd=1/estimation$b)-pnorm(estimation$th[i-1],mean=estimation$a/estimation$b,sd=1/estimation$b)
+  }
+  goodness_statistic<-0
+  for(k in 1:K){
+    goodness_statistic<-goodness_statistic+n0*(data0[k]/n0-P0[k])^2/P0[k]+n1*(data1[k]/n1-P1[k])^2/P1[k]
+  }
+  if(goodness_statistic<=qchisq(1-alpha,K-3)){
+    binormal_indicator<-1
+  }
+  else{
+    binormal_indicator<-0
+  }
+
+  #------------------Zhou statistic
+  if(sum(c(data0,data1)==0)>0){
+    zhou_statistic<-NULL
+    threshold_indicator<-NULL
+  }
+  else{
+    lnL0<-0
+    lnL1<-0
+    for(k in 1:K){
+      lnL1<-lnL1+data0[k]*log(data0[k]/n0,base=exp(1))+data1[k]*log(data1[k]/n1,base=exp(1))
+      lnL0<-lnL0+data1[k]*log(P1[k],base=exp(1))+data0[k]*log(P0[k],base=exp(1))
+    }
+    zhou_statistic<-2*(lnL1-lnL0)
+    if(zhou_statistic<=qchisq(1-alpha,K-3)){
+      threshold_indicator<-1
+    }
+    else{
+      threshold_indicator<-0
+    }
+  }
+  #-----------estimation of TPR at a particular FPR
+  a<-estimation$a
+  b<-estimation$b
+  TPR<-pnorm(a+b*qnorm(FPR))
+  var_a<-estimation$cov_matrix[1,1]
+  var_b<-estimation$cov_matrix[2,2]
+  covar_ab<-estimation$cov_matrix[1,2]
+  #------------pointwise confidence intervals
+  varTPR<-var_a+qnorm(FPR)^2*var_b+2*qnorm(FPR)*covar_ab
+  LL<-qnorm(TPR)-qnorm(1-alpha/2)*sqrt(varTPR)
+  UL<-qnorm(TPR)+qnorm(1-alpha/2)*sqrt(varTPR)
+  TPR_CI<-c(pnorm(LL),pnorm(UL))
+
+  #------------simultaneous confidence bands
+  FPR_seq<-seq(0,1,by=0.001)
+  #--------------two-sided 90% and 95%simultaneous confidence band
+  lower90_seq<-rep(0,length=length(FPR_seq))
+  upper90_seq<-rep(0,length=length(FPR_seq))
+  lower95_seq<-rep(0,length=length(FPR_seq))
+  upper95_seq<-rep(0,length=length(FPR_seq))
+  for(i in 1:length(FPR_seq)){
+    lower90_seq[i]<-pnorm(a+b*qnorm(FPR_seq[i])-2.146*sqrt(varTPR))
+    upper90_seq[i]<-pnorm(a+b*qnorm(FPR_seq[i])+2.146*sqrt(varTPR))
+    lower95_seq[i]<-pnorm(a+b*qnorm(FPR_seq[i])-2.448*sqrt(varTPR))
+    upper95_seq[i]<-pnorm(a+b*qnorm(FPR_seq[i])+2.448*sqrt(varTPR))
+  }
+  plot(1,type="n", main=c("Estimation of Smooth ROC Curve with",length(data0), "Categories"),xlab="FPR", ylab="TPR",xlim=c(0,1),ylim=c(0,1))
+  lines(x, y, col="blue", lty=1, lwd=1)
+  lines(FPR_seq,lower90_seq,col="green",lty=1,lwd=1)
+  lines(FPR_seq,upper90_seq,col="purple",lty=1,lwd=1)
+  lines(FPR_seq,lower95_seq,col="red",lty=1,lwd=1)
+  lines(FPR_seq,upper95_seq,col="yellow",lty=1,lwd=1)
+
+  #-------------Area and Partial Area under the ROC Curve (Parametric Methods)
+  area_func<-function(x){
+    return(pnorm(a+b*qnorm(x)))
+  }
+  area.full<-integrate(area_func,0,1)$value
+  area.partial<-integrate(area_func,e1,e2)$value
+  h1<-(qnorm(e1)+a*b/(1+b^2))*sqrt(1+b^2)
+  h2<-(qnorm(e2)+a*b/(1+b^2))*sqrt(1+b^2)
+  f<-exp(-a^2/2/(1+b^2))/sqrt(2*pi*(1+b^2))
+  g<--a*b*exp(-a^2/2/(1+b^2))/sqrt(2*pi*(1+b^2)^3)
+  partialf<-exp(-a^2/2/(1+b^2))/sqrt(2*pi*(1+b^2))*(pnorm(h2)-pnorm(h1))
+  partialg<-exp(-a^2/2/(1+b^2))*(exp(-h1^2/2)-exp(-h2^2/2))/(2*pi*(1+b^2))-a*b*exp(-a^2/2/(1+b^2))*(pnorm(h2)-pnorm(h1))/(sqrt(2*pi*(1+b^2)^3))
+  var_full<-f^2*var_a+g^2*var_b+2*f*g*covar_ab
+  var_partial<-partialf^2*var_a+partialg^2*var_b+2*partialf*partialg*covar_ab
+  #McClish transformation
+  Amx<-e2-e1
+  Amn<-(e2-e1)*(e2+e1)/2
+  partial_transformed<-(1+(area.partial-Amn)/(Amx-Amn))/2
+  var_transformed<-4*var_partial*Amx^2/((Amx^2-Amn^2)^2)
+
+  #---------输出结果
+  output<-list(goodness_statistic=NULL,binormal_indicator=NULL,zhou_statistic=NULL,threshold_indicator=NULL,thresholds=NULL,nondiseased=NULL,diseased=NULL,a=NULL,b=NULL,var_a=NULL,var_b=NULL,covar_ab=NULL,TPR=NULL,TPR_CI=NULL,area.full=NULL,area.partial=NULL,var_full=NULL,var_partial=NULL,partial_transformed=NULL,var_transformed=NULL)
+  #检验binormal模型是否合适；indicator为1表示假设成立，否则假设不成立
+  output$goodness_statistic<-goodness_statistic
+  output$binormal_indicator<-binormal_indicator
+  output$zhou_statistic<-zhou_statistic
+  output$threshold_indicator<-threshold_indicator
+  #K-1个decision thresholds
+  output$thresholds<-estimation$th
+  #两个正态分布的期望和标准差
+  output$nondiseased<-c(0,1)
+  output$diseased<-c(estimation$a/estimation$b,1/estimation$b)
+  #两个参数的方差和协方差
+  output$a<-a
+  output$b<-b
+  output$var_a<-estimation$cov_matrix[1,1]
+  output$var_b<-estimation$cov_matrix[2,2]
+  output$covar_ab<-estimation$cov_matrix[1,2]
+  #TPR估计及置信区间估计
+  output$TPR<-TPR
+  output$TPR_CI<-TPR_CI
+  #全面积、部分面积及部分面积的方差
+  output$area.full<-area.full
+  output$area.partial<-area.partial
+  output$var_full<-var_full
+  output$var_partial<-var_partial
+  #McClish变换下部分面积及其方差
+  output$partial_transformed<-partial_transformed
+  output$var_transformed<-var_transformed
+  return(output)
+}
+
+

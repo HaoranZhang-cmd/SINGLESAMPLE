@@ -1,0 +1,103 @@
+#' function to calculate sensitivity and decision threshold at a fixed FPR
+#' @param data0 continuous test results of nondiseased subjects
+#' @param data1 continuous test results of diseased subjects
+#' @param SP the fixed specificity
+#' @export
+SDT<-function(data0,data1,SP){
+  n0<-length(data0)
+  n1<-length(data1)
+  TSP<-sort(data0)[ceiling(n0*SP)]
+  Se.Greenhouse<-0
+  for(i in 1:n1){
+    if(data1[i]>TSP){
+      Se.Greenhouse<-Se.Greenhouse+1/n1
+    }
+  }
+  varSe.Greenhouse<-Se.Greenhouse*(1-Se.Greenhouse)/n1
+  #选择合适的r,需要根据实际数据的分布决定。这里先假定r=40
+  r<-40
+  f0<-0
+  f1<-0
+  for(i in 1:n0){
+    if(data1[i]>TSP-r&&data1[i]<TSP+r){
+      f0<-f0+1/(2*r*n0)
+    }
+  }
+  for(i in 1:n1){
+    if(data1[i]>TSP-r&&data1[i]<TSP+r){
+      f1<-f1+1/(2*r*n1)
+    }
+  }
+  varTSP<-SP*(1-SP)/(f0^2*n0)
+  varSe.Linnet<-varSe.Greenhouse+varTSP*f1^2
+  result<-list(TSP=NULL,f0=NULL,f1=NULL,Se=NULL,varSe=NULL)
+  result$TSP<-TSP
+  result$f0<-f0
+  result$f1<-f1
+  result$Se<-Se.Greenhouse
+  result$varSe<-varSe.Linnet
+  return(result)
+}
+
+#' compare sensitivities at a particular point for unpaired design and continuous data
+#' @param data1_no test results of undiseased individuals in test 1
+#' @param data2_no test results of undiseased individuals in test 2
+#' @param data1_yes test results of diseased individuals in test 1
+#' @param data2_yes test results of diseased individuals in test 2
+#' @param alpha significance level
+#' @param SP specificity of this point
+#' @export
+compareSe_unpaired<-function(data1_no,data2_no,data1_yes,data2_yes,SP,alpha){
+  Se1<-SDT(data1_no,data1_yes,SP)$Se
+  Se2<-SDT(data2_no,data2_yes,SP)$Se
+  Z<-(Se1-Se2)/sqrt(SDT(data1_no,data1_yes,SP)$varSe+SDT(data2_no,data2_yes,SP)$varSe)
+  print(c("The test statistic when both test distributions are actually gaussian",Z))
+  if(abs(Z)>qnorm(1-alpha/2)){
+    print("The sensitivities are significantly different when both test distributions are actually gaussian")
+  }
+  else{
+    print("The sensitivities are not significantly different when both test distributions are actually gaussian")
+  }
+}
+
+#' compare sensitivities at a particular point for paired design and continuous data
+#' @param data1_no test results of undiseased individuals in test 1
+#' @param data2_no test results of undiseased individuals in test 2
+#' @param data1_yes test results of diseased individuals in test 1
+#' @param data2_yes test results of diseased individuals in test 2
+#' @param alpha significance level
+#' @param SP specificity of this point
+#' @export
+compareSe_paired<-function(data1_no,data2_no,data1_yes,data2_yes,SP,alpha){
+  T1SP<-SDT(data1_no,data1_yes,SP)$TSP
+  T2SP<-SDT(data2_no,data2_yes,SP)$TSP
+  f1_T1SP<-SDT(data1_no,data1_yes,SP)$f1
+  f0_T1SP<-SDT(data1_no,data1_yes,SP)$f0
+  f1_T2SP<-SDT(data2_no,data2_yes,SP)$f1
+  f0_T2SP<-SDT(data2_no,data2_yes,SP)$f0
+  nodisease<-c(data1_no,data2_no)
+  disease<-c(data1_yes,data2_yes)
+  matrix.no<-matrix(c(0,0,0,0),nrow=2)
+  matrix.yes<-matrix(c(0,0,0,0),nrow=2)
+  matrix.no[1,1]<-sum(nodisease>T1SP&nodisease>T2SP)
+  matrix.no[1,2]<-sum(nodisease>T2SP&nodisease<=T1SP)
+  matrix.no[2,1]<-sum(nodisease>T1SP&nodisease<=T2SP)
+  matrix.no[2,2]<-sum(nodisease<=T1SP&nodisease<=T2SP)
+  matrix.yes[1,1]<-sum(disease>T1SP&disease>T2SP)
+  matrix.yes[1,2]<-sum(disease>T2SP&disease<=T1SP)
+  matrix.yes[2,1]<-sum(disease>T1SP&disease<=T2SP)
+  matrix.yes[2,2]<-sum(disease<=T1SP&disease<=T2SP)
+  Se1<-SDT(data1_no,data1_yes,SP)$Se
+  Se2<-SDT(data2_no,data2_yes,SP)$Se
+  n0<-length(nodisease)
+  n1<-length(disease)
+  var<-SP*(1-SP)/n0*((f1_T1SP/f0_T1SP)^2+(f1_T2SP/f0_T2SP)^2)-2*f1_T1SP*f1_T2SP/(n0*f0_T1SP*f0_T2SP)*(matrix.no[1,1]/n0-(1-SP)^2)
+  Z<-(Se1-Se2)/sqrt(var)
+  print(c("The test statistic is",Z))
+  if(abs(Z)>qnorm(1-alpha/2)){
+    print("The sensitivities are significantly different")
+  }
+  else{
+    print("The sensitivities are not significantly different")
+  }
+}
