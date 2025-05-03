@@ -17,8 +17,11 @@ roc.ppvnpv(data, alpha, x, n)
 \item{n}{the number of subjects evaluated in a random sample from the relevant population}
 }
 \value{
-estimation of PPV and NPV and their confidence intervals, the first is based on
-logit transformation, the second is based on Delta method, and the third is based on objective Bayesian method
+1) Estimated PPV and NPV in the study population(where the original data comes from)
+and their confidence intervals(based on Wald's interval)
+2) Estimated PPV and NPV in a relevant population(with a different prevalence rate as the study population)
+and three different confidence intervals, the first is based on logit transformation,
+the second is based on Delta method, and the third is based on objective Bayesian method.
 #example
 #data<-matrix(c(56,6,23,78),nrow=2,byrow=TRUE)
 #roc.ppvnpv(data,0.05,124,632)

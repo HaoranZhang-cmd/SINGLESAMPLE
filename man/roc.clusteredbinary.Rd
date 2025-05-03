@@ -16,9 +16,17 @@ the third dimension is the number of cluster(the number of matrices)}
 \value{
 estimation of Se,Sp,PPV,NPV,their variances and confidence intervals(wald's interval)
 #example
-#matrix1 <- matrix(c(22, 3, 2, 3), nrow = 2, byrow = TRUE)
-#matrix2 <- matrix(c(56, 6, 23, 78), nrow = 2, byrow = TRUE)
-#data <- array(c(matrix1, matrix2), dim = c(2, 2, 2))
+#matrix1<-matrix(c(2,0,0,1),nrow=2,byrow=TRUE)
+#matrix2<-matrix(c(1,1,1,0),nrow=2,byrow=TRUE)
+#matrix3<-matrix(c(1,0,0,1),nrow=2,byrow=TRUE)
+#matrix4<-matrix(c(1,0,0,2),nrow=2,byrow=TRUE)
+#matrix5<-matrix(c(0,1,1,0),nrow=2,byrow=TRUE)
+#matrix6<-matrix(c(2,0,1,1),nrow=2,byrow=TRUE)
+#matrix7<-matrix(c(1,0,0,1),nrow=2,byrow=TRUE)
+#matrix8<-matrix(c(2,1,0,1),nrow=2,byrow=TRUE)
+#matrix9<-matrix(c(0,1,1,1),nrow=2,byrow=TRUE)
+#matrix10<-matrix(c(1,1,0,1),nrow=2,byrow=TRUE)
+#data<-array(c(matrix1,matrix2,matrix3,matrix4,matrix5,matrix6,matrix7,matrix8,matrix9,matrix10),dim=c(2,2,10))
 #roc.clusteredbinary(data,0.05)
 }
 \description{

@@ -10,17 +10,17 @@
 roc.continuous.emp<-function(data0,data1){
   n0<-length(data0)
   n1<-length(data1)
-  divide<-sort(c(data0,data1))
-  c<-seq(divide[1]-1,divide[length(divide)]+1,by=0.1)
+  c<-c(-Inf,sort(c(data0,data1)),Inf)
   x<-rep(0,length=length(c))
   y<-rep(0,length=length(c))
   for(i in 1:length(c)){
     for(j in 1:n0){
-      x[i] <- x[i] + (data0[j] > c[i])/n0
+      x[i]<-x[i]+(data0[j]>c[i])/n0
     }
     for(j in 1:n1){
-      y[i] <- y[i] + (data1[j] > c[i])/n1
+      y[i]<-y[i]+(data1[j]>c[i])/n1
     }
   }
-  plot(x,y,type="l",xlab="FPR",ylab="Se",xlim=c(0,1),ylim=c(0,1),main="Empirical ROC Curve",col="green")
+  plot(x,y,type="s",xlab="FPR",ylab="Se",xlim=c(0,1),ylim=c(0,1),main="Empirical ROC Curve",col="green",pch=19,cex=0.7)
 }
+

@@ -5,15 +5,37 @@
 #' @param alpha significance level
 #' @return estimation of Se,Sp,PPV,NPV,their variances and confidence intervals(wald's interval)
 #' #example
-#' #matrix1 <- matrix(c(22, 3, 2, 3), nrow = 2, byrow = TRUE)
-#' #matrix2 <- matrix(c(56, 6, 23, 78), nrow = 2, byrow = TRUE)
-#' #data <- array(c(matrix1, matrix2), dim = c(2, 2, 2))
+#' #matrix1<-matrix(c(2,0,0,1),nrow=2,byrow=TRUE)
+#' #matrix2<-matrix(c(1,1,1,0),nrow=2,byrow=TRUE)
+#' #matrix3<-matrix(c(1,0,0,1),nrow=2,byrow=TRUE)
+#' #matrix4<-matrix(c(1,0,0,2),nrow=2,byrow=TRUE)
+#' #matrix5<-matrix(c(0,1,1,0),nrow=2,byrow=TRUE)
+#' #matrix6<-matrix(c(2,0,1,1),nrow=2,byrow=TRUE)
+#' #matrix7<-matrix(c(1,0,0,1),nrow=2,byrow=TRUE)
+#' #matrix8<-matrix(c(2,1,0,1),nrow=2,byrow=TRUE)
+#' #matrix9<-matrix(c(0,1,1,1),nrow=2,byrow=TRUE)
+#' #matrix10<-matrix(c(1,1,0,1),nrow=2,byrow=TRUE)
+#' #data<-array(c(matrix1,matrix2,matrix3,matrix4,matrix5,matrix6,matrix7,matrix8,matrix9,matrix10),dim=c(2,2,10))
 #' #roc.clusteredbinary(data,0.05)
 #' @export
 #---------------------4.1.3 Sensitivity, Specificity and Predictive Values with Clustered Binary-Scale Data
 roc.clusteredbinary<-function(data,alpha){
   result<-list(Se=NULL,Se.var=NULL,Sp=NULL,Sp.var=NULL,PPV=NULL,PPV.var=NULL,NPV=NULL,NPV.var=NULL,Se.interval=NULL,Sp.interval=NULL,PPV.interval=NULL,NPV.interval=NULL)
   I<-dim(data)[3]
+  for(i in 1:I){
+    if(data[,,i][1,1]==0&&data[,,i][1,2]==0){
+      print("There is a cluster with 0 diseased unit. Sensitivity can not be calculated.")
+    }
+    if(data[,,i][2,1]==0&&data[,,i][2,2]==0){
+      print("There is a cluster with 0 undiseased unit. Specificity can not be calculated.")
+    }
+    if(data[,,i][1,1]==0&&data[,,i][2,1]==0){
+      print("There is a cluster with 0 positive test result. PPV can not be calculated.")
+    }
+    if(data[,,i][1,2]==0&&data[,,i][2,2]==0){
+      print("There is a cluster with 0 negative test result. NPV can not be calculated.")
+    }
+  }
   for(i in 1:I){
     if(dim(data)[1]!=2||dim(data)[2]!=2){
       stop("each cluster should represented by an 2*2 table")

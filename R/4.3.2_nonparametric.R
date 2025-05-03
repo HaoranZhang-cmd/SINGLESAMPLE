@@ -86,10 +86,10 @@ roc.biweight<-function(data0,data1){
   }
   cmin<-min(c(new_data0-h0,new_data1-h1))
   cmax<-max(c(new_data0+h0,new_data1+h1))
-  c_seq<-seq(cmin,cmax,length=1000)
-  x<-rep(0,1000)
-  y<-rep(0,1000)
-  for(i in 1:1000){
+  c_seq<-seq(cmin,cmax,length=10000)
+  x<-rep(0,10000)
+  y<-rep(0,10000)
+  for(i in 1:10000){
     x[i]<-F0(c_seq[i])
     y[i]<-F1(c_seq[i])
   }
@@ -129,14 +129,21 @@ roc.gaussian<-function(data0,data1){
   }
   cmin<-min(c(new_data0-5*h0,new_data1-5*h1))
   cmax<-max(c(new_data0+5*h0,new_data1+5*h1))
-  c_seq<-seq(cmin,cmax,length=1000)
-  x<-rep(0,1000)
-  y<-rep(0,1000)
-  for(i in 1:1000){
+  c_seq<-seq(cmin,cmax,length=10000)
+  x<-rep(0,10000)
+  y<-rep(0,10000)
+  for(i in 1:10000){
     x[i]<-F0(c_seq[i])
     y[i]<-F1(c_seq[i])
   }
   plot(x,y,type="l",col="blue",xlab="FPR",ylab="TPR",main="Estimation of Smooth ROC Curve Using Gaussian Kernel")
+  area_full<-0
+  for(i in 1:n1){
+    for(j in 1:n0){
+      area_full<-area_full+pnorm((data1[i]-data0[j])/sqrt(h0^2+h1^2))/(n0*n1)
+    }
+  }
+  return(area_full)
 }
 
 #  using the method proposed by Zhou and Harezlar(2002)
@@ -185,9 +192,9 @@ roc_Zhou_Harezlar<-function(data0,data1){
       y1[i]<-y1[i]+Epanechnikov_kernel((cut1[i]-new_data1[j])/bandwidth[2,1])/n1
     }
   }
-  plot(y1,x1,xlab="FPR",ylab="TPR",xlim=c(0,1),ylim=c(0,1),type="l",col="purple",main="Estimation of Smooth ROC Curve Using Zou's Bandwidth")
+  plot(y1,x1,xlab="FPR",ylab="TPR",xlim=c(0,1),ylim=c(0,1),type="l",col="purple",main="Estimation of Smooth ROC Curve")
   #第二条
-  cut2<-seq(-max(c(data0,data1)),max(c(data0,data1)),length=1000)
+  cut2<-seq(-max(c(data0,data1)),max(c(data0,data1)),length=10000)
   x2<-rep(0,length=length(cut2))
   y2<-rep(0,length=length(cut2))
   for(i in 1:length(x2)){
@@ -198,5 +205,7 @@ roc_Zhou_Harezlar<-function(data0,data1){
       y2[i]<-y2[i]+Epanechnikov_kernel((cut2[i]-data1[j])/bandwidth[2,2])/n1
     }
   }
-  plot(y2,x2,xlab="FPR",ylab="TPR",xlim=c(0,1),ylim=c(0,1),type="l",col="pink",main="Estimation of Smooth ROC Curve Using Bowman's Bandwidth")
+  lines(y2,x2,col="pink")
+  legend("bottomright",legend=c("Zou's Bandwidth","Bowman's Bandwidth"),
+         col=c("purple","pink"),lty=1,cex=1)
 }

@@ -12,9 +12,9 @@ roc.nonparametric(data0, data1, p, s)
 
 \item{data1}{test results of diseased subjects}
 
-\item{p}{the partial area between the FPRs e1 and e2, which correspond to the p-th and s-th ordinal test results}
+\item{p}{p is the ordinal test result that correspond to e1}
 
-\item{s}{the partial area between the FPRs e1 and e2, which correspond to the p-th and s-th ordinal test results}
+\item{s}{p+s is the ordinal test result that correspond to e2}
 }
 \value{
 estimation of full area using MW estimate and Delong's estimate and their variances,
@@ -22,7 +22,7 @@ estimation of partial area
 #example
 #data0<-c(38,25,15,19,4)
 #data1<-c(1,2,3,14,42)
-#roc.nonparametric(data0,data1,2,4)
+#roc.nonparametric(data0,data1,2,2)
 }
 \description{
 using nonparametric method to estimate full area and partial area under ROC curve

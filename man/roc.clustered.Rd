@@ -4,7 +4,7 @@
 \alias{roc.clustered}
 \title{using nonparametric method to estimate AUC and its variance}
 \usage{
-roc.clustered(data)
+roc.clustered(data, alpha, B)
 }
 \arguments{
 \item{data}{the test result.It is a matrix consisting of even rows
@@ -12,12 +12,16 @@ each cluster corresponds to two rows
 The first row is the ordinal test results for diseased units in that cluster
 The second row is the ordinal test results for undiseased units in that cluster
 The cols represent ordinal test results.}
+
+\item{alpha}{1-alpha is the desired confidence level}
+
+\item{B}{number of bootstrap replications}
 }
 \value{
 estimation of AUC and its variance
 #example
-#data<-matrix(c(1,2,3,14,42,38,25,15,19,4,8,2,2,2,48,70,7,5,7,12),nrow=4,byrow=TRUE)
-#roc.clustered(data)
+#data<-matrix(c(0,0,0,3,1,2,0,1,0,0,0,0,1,0,0,1,1,1,0,0,0,0,2,0,1,0,1,0,1,0,0,0,2,0,3,0,3,0,0,1,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,1,1,1,0,0,1,0,0,2,0,2,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,1,2,0,0,1,0,0,0,2,0,0,0,1,0,0),nrow=20,byrow=TRUE)
+#roc.clustered(data,0.05,1000)
 }
 \description{
 using nonparametric method to estimate AUC and its variance

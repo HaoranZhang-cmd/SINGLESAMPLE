@@ -100,7 +100,7 @@ roc.ordinal.smooth<-function(data0,data1,alpha,FPR,e1,e2){
   for(k in 1:K){
     goodness_statistic<-goodness_statistic+n0*(data0[k]/n0-P0[k])^2/P0[k]+n1*(data1[k]/n1-P1[k])^2/P1[k]
   }
-  if(goodness_statistic<=qchisq(1-alpha,K-2)){
+  if(goodness_statistic<=qchisq(1-alpha,K-3)){
     binormal_indicator<-1
   }
   else{
@@ -120,7 +120,7 @@ roc.ordinal.smooth<-function(data0,data1,alpha,FPR,e1,e2){
       lnL0<-lnL0+data1[k]*log(P1[k],base=exp(1))+data0[k]*log(P0[k],base=exp(1))
     }
     zhou_statistic<-2*(lnL1-lnL0)
-    if(zhou_statistic<=qchisq(1-alpha,K-3)){
+    if(zhou_statistic<=qchisq(1-alpha,K-1)){
       threshold_indicator<-1
     }
     else{
@@ -140,21 +140,25 @@ roc.ordinal.smooth<-function(data0,data1,alpha,FPR,e1,e2){
   TPR_CI<-c(pnorm(LL),pnorm(UL))
 
   #------------simultaneous confidence bands
-  FPR_seq<-seq(0,1,by=0.001)
+  FPR_seq<-seq(0,1,by=0.0001)
   #--------------two-sided 100(1-alpha)% simultaneous confidence band
   lower_seq<-rep(0,length=length(FPR_seq))
   upper_seq<-rep(0,length=length(FPR_seq))
   k<-sqrt(-2*log(alpha,base=exp(1)))
   for(i in 1:length(FPR_seq)){
-    lower_seq[i]<-pnorm(a+b*qnorm(FPR_seq[i])-k*sqrt(varTPR))
-    upper_seq[i]<-pnorm(a+b*qnorm(FPR_seq[i])+k*sqrt(varTPR))
+    tmp<-var_a+qnorm(FPR_seq[i])^2*var_b+2*qnorm(FPR_seq[i])*covar_ab
+    lower_seq[i]<-pnorm(a+b*qnorm(FPR_seq[i])-k*sqrt(tmp))
+    upper_seq[i]<-pnorm(a+b*qnorm(FPR_seq[i])+k*sqrt(tmp))
   }
-  plot(1,type="n", main=c("Estimation of Smooth ROC Curve with",length(data0), "Categories"),xlab="FPR", ylab="TPR",xlim=c(0,1),ylim=c(0,1))
-  lines(x, y, col="blue", lty=1, lwd=1)
+  plot(1,type="n",
+       main=paste("Estimation of Smooth ROC Curve with",length(data0),"Categories"),
+       xlab="FPR",ylab="TPR",
+       xlim=c(0,1),ylim=c(0,1))
+  lines(x,y,col="blue",lty=1,lwd=1)
   lines(FPR_seq,lower_seq,col="green",lty=1,lwd=1)
   lines(FPR_seq,upper_seq,col="purple",lty=1,lwd=1)
   legend("bottomright",legend=c("ROC Curve","lower confidence band", "upper confidence band"),
-         col=c("blue", "green", "purple"), lty=c(1,1,1),lwd = c(1,1,1))
+         col=c("blue", "green", "purple"), lty=c(1,1,1),lwd=c(1,1,1))
 
   #-------------Area and Partial Area under the ROC Curve (Parametric Methods)
   area_func<-function(x){

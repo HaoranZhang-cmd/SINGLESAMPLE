@@ -23,7 +23,7 @@ BoxCox<-function(data0,data1){
     var0<-var(data0_transformed)*(n0-1)/n0
     result0<-log(sqrt(var0))*(-n0)+sum(log(data0^(lambda-1))-(data0_transformed-mean0)^2/(2*var0))
     mean1<-mean(data1_transformed)
-    var1<-var(data1_transformed)*(n1-1)/length(data1)
+    var1<-var(data1_transformed)*(n1-1)/n1
     result1<-log(sqrt(var1))*(-n1)+sum(log(data1^(lambda-1))-(data1_transformed-mean1)^2/(2*var1))
     return(-result0-result1)
   }
@@ -37,6 +37,7 @@ BoxCox<-function(data0,data1){
     data0_transformed<-log(data0)
     data1_transformed<-log(data1)
   }
+
   a<-(mean(data1_transformed)-mean(data0_transformed))/sqrt(var(data1_transformed)*(n1-1)/n1)
   b<-sqrt(var(data0_transformed)*(n0-1)/n0)/sqrt(var(data1_transformed)*(n1-1)/n1)
   area.full<-pnorm(a/sqrt(1+b^2))

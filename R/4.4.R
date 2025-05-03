@@ -9,11 +9,11 @@
 #' @export
 roc.testing<-function(A0,A,variance,alpha){
   statistic<-(A-A0)/sqrt(variance)
-  print(c("The test statistic is",statistic))
-  if(abs(statistic)>qnorm(1-alpha/2)){
-    print("The null hypothesis is rejected")
-  }
-  else{
-    print("The null hypothesis is accepted")
-  }
+  result<-list(
+    test_statistic=statistic,
+    hypothesis_result=ifelse(abs(statistic)>qnorm(1-alpha/2),
+    "The null hypothesis is rejected",
+    "The null hypothesis is accepted")
+  )
+  return(result)
 }

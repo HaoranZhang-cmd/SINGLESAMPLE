@@ -4,8 +4,11 @@
 #' @param alpha significance level
 #' @param n the number of subjects evaluated in a random sample from the relevant population
 #' @param x the number of diseased subjects in n subjects
-#' @return estimation of PPV and NPV and their confidence intervals, the first is based on
-#' logit transformation, the second is based on Delta method, and the third is based on objective Bayesian method
+#' @return 1) Estimated PPV and NPV in the study population(where the original data comes from)
+#' and their confidence intervals(based on Wald's interval)
+#' 2) Estimated PPV and NPV in a relevant population(with a different prevalence rate as the study population)
+#' and three different confidence intervals, the first is based on logit transformation,
+#' the second is based on Delta method, and the third is based on objective Bayesian method.
 #' #example
 #' #data<-matrix(c(56,6,23,78),nrow=2,byrow=TRUE)
 #' #roc.ppvnpv(data,0.05,124,632)
@@ -24,13 +27,24 @@ roc.ppvnpv<-function(data,alpha,x,n){
   m1<-sum(data[,1])
   m0<-sum(data[,2])
   N<-n0+n1
-  #------------- Estimated value
+  #------------- Estimated value in the study population(where the original data comes from)
   Se<-s1/n1
   Sp<-r0/n0
+  output<-list(Estimate_study_population=NULL,PPV.interval_study_population=NULL,
+               NPV.interval_study_population=NULL,Estimate_relevant_population=NULL,
+               PPV.interval1_relevant_population=NULL,PPV.interval2_relevant_population=NULL,
+               PPV.interval3_relevant_population=NULL,NPV.interval1_relevant_population=NULL,
+               NPV.interval2_relevant_population=NULL,NPV.interval3_relevant_population=NULL)
   p<-x/n
+  output$Estimate_study_population<-c(s1/m1,r0/m0)
+  var_study_population<-c(s1*r1/m1^3,r0*s0/m0^3)
+  output$PPV.interval_study_population<-c(s1/m1-qnorm(1-alpha/2)*sqrt(s1*r1/m1^3),s1/m1+qnorm(1-alpha/2)*sqrt(s1*r1/m1^3))
+  output$NPV.interval_study_population<-c(r0/m0-qnorm(1-alpha/2)*sqrt(r0*s0/m0^3),r0/m0+qnorm(1-alpha/2)*sqrt(r0*s0/m0^3))
+
+  #Assume Se and Sp is the same, transform to a relevant population with different prevalence rate
   PPV<-p*Se/((p*Se)+(1-Sp)*(1-p))
   NPV<-Sp*(1-p)/(Sp*(1-p)+(1-Se)*p)
-  #---------------confidence interval
+  #---------------three different confidence intervals
   #based on the logit transformation of the Bayes formula
   PPV.logit<-log(p*Se/((1-Sp)*(1-p)),base=exp(1))
   NPV.logit<-log((1-p)*Sp/((1-Se)*p),base=exp(1))
@@ -63,13 +77,12 @@ roc.ppvnpv<-function(data,alpha,x,n){
   NPV_seq<-(1-p_seq)*(1-FPR_seq)/((1-FPR_seq)*(1-p_seq)+(1-Se_seq)*p_seq)
   PPV.interval3<-c(quantile(PPV_seq,probs=alpha/2),quantile(PPV_seq,probs=1-alpha/2))
   NPV.interval3<-c(quantile(NPV_seq,probs=alpha/2),quantile(NPV_seq,probs=1-alpha/2))
-  output<-list(Estimate=NULL,PPV.interval1=NULL,PPV.interval2=NULL,PPV.interval3=NULL,NPV.interval1=NULL,NPV.interval2=NULL,NPV.interval3=NULL)
-  output$Estimate<-c(PPV,NPV)
-  output$PPV.interval1<-PPV.interval1
-  output$PPV.interval2<-PPV.interval2
-  output$PPV.interval3<-PPV.interval3
-  output$NPV.interval1<-NPV.interval1
-  output$NPV.interval2<-NPV.interval2
-  output$NPV.interval3<-NPV.interval3
+  output$Estimate_relevant_population<-c(PPV,NPV)
+  output$PPV.interval1_relevant_population<-PPV.interval1
+  output$PPV.interval2_relevant_population<-PPV.interval2
+  output$PPV.interval3_relevant_population<-PPV.interval3
+  output$NPV.interval1_relevant_population<-NPV.interval1
+  output$NPV.interval2_relevant_population<-NPV.interval2
+  output$NPV.interval3_relevant_population<-NPV.interval3
   return(output)
 }

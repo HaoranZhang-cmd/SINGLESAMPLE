@@ -21,24 +21,26 @@ SDT<-function(data0,data1,SP,alpha){
       Se.Greenhouse<-Se.Greenhouse+1/n1
     }
   }
-  print(c("Estimation of sensitivity corresponding to this threshold is",Se.Greenhouse))
   varSe.Greenhouse<-Se.Greenhouse*(1-Se.Greenhouse)/n1
-  new_data0<-roc.transformed(data0,data1)$data0_transformed
-  new_data1<-roc.transformed(data0,data1)$data1_transformed
-  new_TSP<-sort(new_data0)[ceiling(n0*SP)]
-  h0<-0.9*min(sd(new_data0),(sort(new_data0)[ceiling(n0*0.75)]-sort(new_data0)[ceiling(n0*0.25)])/1.34)/(n0)^(1/5)
-  h1<-0.9*min(sd(new_data1),(sort(new_data1)[ceiling(n1*0.75)]-sort(new_data1)[ceiling(n1*0.25)])/1.34)/(n1)^(1/5)
+  TSP<-sort(data0)[ceiling(n0*SP)]
+  h0<-0.9*min(sd(data0),(sort(data0)[ceiling(n0*0.75)]-sort(data0)[ceiling(n0*0.25)])/1.34)/(n0)^(1/5)
+  h1<-0.9*min(sd(data1),(sort(data1)[ceiling(n1*0.75)]-sort(data1)[ceiling(n1*0.25)])/1.34)/(n1)^(1/5)
   f0<-0
   f1<-0
   for(i in 1:n0){
-    f0<-f0+dnorm((new_TSP-new_data0[i])/h0)/(n0*h0)
+    if(abs(TSP-data0[i])<h0){
+      f0<-f0+15/16*(1-(TSP-data0[i])^2/h0^2)^2
+    }
   }
+  f0<-f0/(n0*h0)
   for(i in 1:n1){
-    f1<-f1+dnorm((new_TSP-new_data1[i])/h1)/(n1*h1)
+    if(abs(TSP-data1[i])<h1){
+      f1<-f1+15/16*(1-(TSP-data1[i])^2/h1^2)^2
+    }
   }
+  f1<-f1/(n1*h1)
   varTSP<-SP*(1-SP)/(f0^2*n0)
   varSe.Linnet<-varSe.Greenhouse+varTSP*f1^2
-
   #------------------Zhou and Qin confidence interval
   z<-qnorm(1-alpha/2)
   B<-1000
@@ -55,28 +57,18 @@ SDT<-function(data0,data1,SP,alpha){
     RSP[b]<-(RSP[b]+z^2/2)/(n1+z^2)
   }
   interval<-c(mean(RSP)-z*sqrt(var(RSP)),mean(RSP)+z*sqrt(var(RSP)))
-
-  c_nonparametric<-new_TSP+qnorm(sqrt(1-alpha))*sqrt(varTSP)
-  lambda<-roc.transformed(data0,data1)$lambda
-  #用Box-Cox变换的逆变换换回原始数据
-  threshold<-(lambda*c_nonparametric+1)^(1/lambda)
+  c_nonparametric<-TSP+qnorm(sqrt(1-alpha))*sqrt(varTSP)
   Se_nonparametric<-0
   for(i in 1:n1){
-    if(new_data1[i]>c_nonparametric){
+    if(data1[i]>c_nonparametric){
       Se_nonparametric<-Se_nonparametric+1/n1
     }
   }
   lower_nonparametric<-Se_nonparametric-qnorm(sqrt(1-alpha))*sqrt(Se_nonparametric*(1-Se_nonparametric)/n1)
-  print("Confidence intervals for the estimated sensitivity,Zhou and Qin")
-  print(interval)
-  print("The decision threshold")
-  print(threshold)
-  print("The lower confidence bound for sensitivity")
-  print(lower_nonparametric)
+  result<-list(sensitivity_estimation=Se.Greenhouse,confidence_interval=interval,
+               decision_threshold=c_nonparametric,lower_confidence_bound=lower_nonparametric)
+  return(result)
 }
-
-
-
 
 
 

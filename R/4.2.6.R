@@ -2,16 +2,17 @@
 #' also estimate the variance of full area
 #' @param data0 test results of nondiseased subjects
 #' @param data1 test results of diseased subjects
-#' @param p the partial area between the FPRs e1 and e2, which correspond to the p-th and s-th ordinal test results
-#' @param s the partial area between the FPRs e1 and e2, which correspond to the p-th and s-th ordinal test results
+#' @param p p is the ordinal test result that correspond to e1
+#' @param s p+s is the ordinal test result that correspond to e2
 #' @return estimation of full area using MW estimate and Delong's estimate and their variances,
 #' estimation of partial area
 #' #example
 #' #data0<-c(38,25,15,19,4)
 #' #data1<-c(1,2,3,14,42)
-#' #roc.nonparametric(data0,data1,2,4)
+#' #roc.nonparametric(data0,data1,2,2)
 #' @export
 roc.nonparametric<-function(data0,data1,p,s){
+  s<-s+p
   generate<-function(data){
     result<-c()
     for(i in 1:length(data)){

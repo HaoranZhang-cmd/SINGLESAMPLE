@@ -1,7 +1,7 @@
 Package: SINGLESAMPLE
 Type: Package
 Title: SINGLESAMPLE
-Version: 0.1.0
+Version: 0.2.3
 Author: Haoran Zhang
 Maintainer: Haoran Zhang <2100010804@stu.pku.edu.cn>
 Description: This package contains most methods described in chapter4.
@@ -9,3 +9,4 @@ License: GPL-3
 Depends: numDeriv
 Encoding: UTF-8
 RoxygenNote: 7.2.3
+

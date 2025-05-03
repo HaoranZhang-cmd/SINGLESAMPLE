@@ -5,20 +5,18 @@
 \title{Draw an empirical ROC curve and calculate AUC for ordinal data
 Also compute variance and CI for AUC}
 \usage{
-roc.ordinal.emp(data, alpha)
+roc.ordinal.emp(data)
 }
 \arguments{
 \item{data}{a matrix with two rows.
 The first row is test results for diseased subjects
 The second row is test results for nondiseased subjects}
-
-\item{alpha}{significance level}
 }
 \value{
-estimation of AUC and its variance and confidence interval(using Hanley's and Delong's method)
+an empirical ROC curve
 #example
 #data<-matrix(c(1,2,3,14,42,38,25,15,19,4),nrow=2,byrow=TRUE)
-#roc.ordinal.emp(data,0.05)
+#roc.ordinal.emp(data)
 }
 \description{
 Draw an empirical ROC curve and calculate AUC for ordinal data

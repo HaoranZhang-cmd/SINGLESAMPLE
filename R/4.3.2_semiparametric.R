@@ -88,9 +88,13 @@ roc.semiparametric<-function(data0,data1){
   estimation<-result$par
   alpha0<-estimation[length(estimation)-1]
   alpha1<-estimation[length(estimation)]
-  x<-seq(0,1,by=0.01)
+  x<-seq(0,1,by=0.0001)
   y<-pnorm(alpha0+alpha1*qnorm(x))
   plot(x,y,xlab="FPR",ylab="TPR",type="l",main="Estimation of Smooth ROC Curve Using Semiparametric Method",col="brown")
+  result<-list(alpha=NULL,area_full=NULL)
+  result$alpha<-c(alpha0,alpha1)
+  result$area_full<-pnorm(alpha0/sqrt(1+alpha1^2))
+  return(result)
 }
 
 

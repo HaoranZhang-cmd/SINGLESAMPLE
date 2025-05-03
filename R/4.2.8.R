@@ -62,7 +62,7 @@ roc.bigamma<-function(data0,data1){
     x[i]<-pgamma(c[i],shape=alpha,scale=sigma0,lower.tail=FALSE)
     y[i]<-pgamma(c[i],shape=alpha,scale=sigma1,lower.tail=FALSE)
   }
-  plot(x,y,main=c("Estimation of Smooth ROC Curve with",length(data0),"Categories"),xlab="FPR",ylab="TPR",col="green",type="l")
+  plot(x,y,main=paste("Estimation of Smooth ROC Curve with",length(data0),"Categories"),xlab="FPR",ylab="TPR",col="green",type="l")
 }
 
 
@@ -129,5 +129,5 @@ roc.logistic<-function(data0,data1){
     x[i]<-plogis(c[i],location=mu0,scale=gamma0,lower.tail=FALSE)
     y[i]<-plogis(c[i],location=mu1,scale=gamma1,lower.tail=FALSE)
   }
-  plot(x,y,main=c("Estimation of Smooth ROC Curve with",length(data0),"Categories"),xlab="FPR",ylab="TPR",col="green",type="l")
+  plot(x,y,main=paste("Estimation of Smooth ROC Curve with",length(data0),"Categories"),xlab="FPR",ylab="TPR",col="green",type="l")
 }

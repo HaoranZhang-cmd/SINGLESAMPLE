@@ -131,3 +131,6 @@ roc.binormality_optimal<-function(data0,data1,m){
   result$threshold<-mean(data0)-sd(data0)*qnorm(FPR_optimal)
   return(result)
 }
+
+
+
